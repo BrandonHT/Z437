@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ building_name }} — Estado de cuentas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="site-header__inner">
+    <h1>{{ building_name }}</h1>
+    <p class="site-header__meta">Estado de cuentas del condominio · Última actualización: {{ fecha_actualizacion }}</p>
+    <nav class="site-nav">
+      <a href="#resumen">Resumen</a>
+      <a href="#estado-cuenta">Estado de cuenta por depto.</a>
+      <a href="#gastos-mensuales">Gastos mensuales</a>
+      <a href="#extraordinarios">Notas y gastos extraordinarios</a>
+      <a href="#resumen-anual">Resumen anual</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+  <section id="resumen" class="hero">
+    <div class="hero__remanente">
+      <div class="label">Remanente actual (pagado − gastado)</div>
+      <div class="value {{ 'positivo' if resumen_hero.remanente_positivo else 'negativo' }}">{{ resumen_hero.remanente }}</div>
+    </div>
+    <div class="hero__stats">
+      <div class="hero__stat">
+        <div class="label">Total de cuotas del año</div>
+        <div class="value">{{ resumen_hero.total_cuotas }}</div>
+      </div>
+      <div class="hero__stat">
+        <div class="label">Total pagado a la fecha</div>
+        <div class="value">{{ resumen_hero.total_pagado }}</div>
+      </div>
+      <div class="hero__stat">
+        <div class="label">Pendiente de cobro</div>
+        <div class="value">{{ resumen_hero.total_debe }}</div>
+      </div>
+      <div class="hero__stat">
+        <div class="label">Total gastado a la fecha</div>
+        <div class="value">{{ resumen_hero.total_gastos }}</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="estado-cuenta">
+    <h2>Estado de cuenta por departamento</h2>
+    <p class="section-note">Cuotas de mantenimiento: total anual, lo pagado y lo pendiente por cada departamento.</p>
+    <p class="scroll-hint">Desliza la tabla hacia los lados para ver todos los meses.</p>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            {% for h in dueños.headers %}<th>{{ h }}</th>{% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in dueños.owner_rows %}
+          <tr class="{{ row[-1] }}">
+            {% for cell in row[:-1] %}<td>{{ cell }}</td>{% endfor %}
+          </tr>
+          {% endfor %}
+          {% if dueños.total_row %}
+          <tr class="total-row">
+            {% for cell in dueños.total_row %}<td>{{ cell }}</td>{% endfor %}
+          </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="gastos-mensuales">
+    <h2>Gastos mensuales del condominio</h2>
+    <p class="section-note">Servicios fijos y su costo mes a mes (vigilancia, limpieza, elevadores, luz, basura, otros).</p>
+    <p class="scroll-hint">Desliza la tabla hacia los lados para ver todos los meses.</p>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            {% for h in gastos_mes.headers %}<th>{{ h }}</th>{% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in gastos_mes.service_rows %}
+          <tr>
+            {% for cell in row %}<td>{{ cell }}</td>{% endfor %}
+          </tr>
+          {% endfor %}
+          {% if gastos_mes.total_row %}
+          <tr class="total-row">
+            {% for cell in gastos_mes.total_row %}<td>{{ cell }}</td>{% endfor %}
+          </tr>
+          {% endif %}
+          {% if gastos_mes.diferencia_row %}
+          <tr>
+            {% for cell in gastos_mes.diferencia_row %}<td>{{ cell }}</td>{% endfor %}
+          </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="extraordinarios">
+    <h2>Notas y gastos extraordinarios</h2>
+    <p class="section-note">Cualquier gasto fuera de lo común queda anotado aquí, mes con mes.</p>
+
+    <ul class="notas-list">
+      {% for n in notas %}
+      <li class="{{ '' if n.tiene_nota else 'sin-nota' }}">
+        <span class="mes">{{ n.mes.title() }}</span>
+        <span class="comentario">{{ n.comentario if n.tiene_nota else 'Sin gastos extraordinarios' }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+
+    <h3 style="margin-bottom:16px;">Desglose de los gastos extraordinarios</h3>
+    <p class="scroll-hint">Desliza la tabla hacia los lados para ver todos los meses.</p>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            {% for h in extraordinarios.headers %}<th>{{ h }}</th>{% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in extraordinarios.concept_rows %}
+          <tr>
+            {% for cell in row %}<td>{{ cell }}</td>{% endfor %}
+          </tr>
+          {% endfor %}
+          {% if extraordinarios.total_row %}
+          <tr class="total-row">
+            {% for cell in extraordinarios.total_row %}<td>{{ cell }}</td>{% endfor %}
+          </tr>
+          {% endif %}
+          {% if extraordinarios.total_depto_row %}
+          <tr>
+            {% for cell in extraordinarios.total_depto_row %}<td>{{ cell }}</td>{% endfor %}
+          </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="resumen-anual">
+    <h2>Resumen de gastos anualizados</h2>
+    <p class="section-note">Estimado del gasto mensual y su proyección para el año completo, por tipo de servicio.</p>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            {% for h in resumen_anual.headers %}<th>{{ h }}</th>{% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in resumen_anual.concept_rows %}
+          <tr>
+            {% for cell in row %}<td>{{ cell }}</td>{% endfor %}
+          </tr>
+          {% endfor %}
+          {% if resumen_anual.total_row %}
+          <tr class="total-row">
+            {% for cell in resumen_anual.total_row %}<td>{{ cell }}</td>{% endfor %}
+          </tr>
+          {% endif %}
+          {% if resumen_anual.total_depto_row %}
+          <tr>
+            {% for cell in resumen_anual.total_depto_row %}<td>{{ cell }}</td>{% endfor %}
+          </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  Página generada automáticamente todos los días a partir del registro de cuentas del condominio. Cualquier duda sobre un movimiento, contactar a la administración.
+</footer>
+
+</body>
+</html>
